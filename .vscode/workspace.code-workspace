@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "path": "../",
+      "name": "home-server"
+    },
+    {
+      "path": "/",
+      "name": "server-root"
+    }
+  ],
+  "settings": {
+    "editor.tabSize": 2,
+    "files.exclude": {
+      "**/.git": true,
+      "**/node_modules": true
+    }
+  }
+}
