@@ -6,6 +6,8 @@ Personal home server documentation
 
 Runs behind the nginx reverse proxy. Listens on `127.0.0.1:8080`.
 
+Config backup: [`nextcloud/config.php`](nextcloud/config.php)
+
 ### Access
 
 | URL | Status | Notes |
@@ -42,7 +44,10 @@ Serves as the reverse proxy for all services behind a single domain.
 | `/etc/nginx/conf.d/ollama-auth.conf` | Authentication/rate-limiting for the Ollama API |
 | `/etc/nginx/default.d/*.conf` | Additional default server includes |
 
-Backup is at [`nginx/nginx.conf`](nginx/nginx.conf).
+Backups:
+- [`nginx/nginx.conf`](nginx/nginx.conf) — main config
+- [`nginx/nextcloud.conf`](nginx/nextcloud.conf) — site routing / reverse proxy rules
+- [`nginx/services.conf`](nginx/services.conf) — default server proxy locations for local HTTP access
 
 ### Server names
 
