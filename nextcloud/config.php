@@ -67,5 +67,5 @@ $CONFIG = array (
   'dbpassword' => 'ba7oC(SE&fq(z&K<n!mjkEU0R[+]0|',
   'installed' => true,
   'maintenance' => false,
-  'overwritewebroot' => '/nextcloud',
+  'overwritewebroot' => '',
 );
