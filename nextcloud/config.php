@@ -55,6 +55,7 @@ $CONFIG = array (
     0 => 'localhost',
     1 => 'tdemers.duckdns.org',
     2 => '192.168.0.31',
+    3 => 'nextcloud.tdemers.duckdns.org',
   ),
   'datadirectory' => '/var/www/html/data',
   'dbtype' => 'pgsql',
