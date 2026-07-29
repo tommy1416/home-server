@@ -4,7 +4,6 @@ linux distro: Fedora 44
 hardware: intel i7 9700k, AMD 290x, 1TB SSD, 4TB HDD
 
 Softwares:
-
 Nginx, server path: /etc/nginx/nginx.conf repo path: nginx/nginx.conf
 Nextcloud
 Copilot
@@ -14,3 +13,15 @@ Netdata
 Vaultwarden
 Ollama models API
 Backup system from SSD to HDD
+
+Routes:
+http://192.168.0.31/
+http://127.0.0.1/
+
+Routes (Should work if we skip SSL certification validation):
+https://192.168.0.31/
+https://127.0.0.1/
+
+Routes that only work from outsite (router doesn't route properly from the local network):
+https://tdemers.duckdns.org/
+http://tdemers.duckdns.org/

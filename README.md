@@ -1,6 +1,33 @@
 # home-server
 
-Personal home server documentation. Runs on Fedora 44 (Intel i7-9700K, AMD 290x, 1TB SSD, 4TB HDD).
+Personal home server documentation
+
+## Nextcloud
+
+Runs behind the nginx reverse proxy. Listens on `127.0.0.1:8080`.
+
+### Access
+
+| URL | Status | Notes |
+|---|---|---|
+| `https://tdemers.duckdns.org/nextcloud/` | ✅ Works (external only) | Primary access via domain — router doesn't support hairpin NAT |
+| `https://tdemers.duckdns.org/` | ✅ Works (external only) | Redirects to /nextcloud/ via catch-all proxy |
+| `http://192.168.0.31/nextcloud/` | ✅ Works | Local HTTP access — `proxy_redirect` rewrites Nextcloud's 302 to local host |
+| `http://127.0.0.1/nextcloud/` | ✅ Works | Local HTTP access — same proxy_redirect fix |
+| `https://192.168.0.31/` | ❌ Cert mismatch | SSL cert only covers `tdemers.duckdns.org` |
+
+### Known issues
+
+- **Hairpin NAT / NAT loopback:** The router doesn't route `tdemers.duckdns.org` requests from inside the LAN back to the server. Accessing Nextcloud via the domain only works from outside the home network. Local users must use `http://192.168.0.31/nextcloud/` instead.
+- **SSL cert scope:** The Let's Encrypt cert only covers `tdemers.duckdns.org`. HTTPS via local IP (`192.168.0.31`, `127.0.0.1`) produces browser certificate warnings.
+- **Mixed-content warnings:** Nextcloud's config references `tdemers.duckdns.org` for some assets, causing failed resource loads when accessed via local IPs. Functionality (login, file sync) is unaffected.
+
+### Nginx fix applied
+
+When Nextcloud is accessed via HTTP reverse proxy, it returns a 302 redirect to `https://tdemers.duckdns.org/nextcloud/login`. Since that domain is unreachable from the LAN, the fix was to add `proxy_redirect` rules:
+
+- **`/etc/nginx/default.d/services.conf`** — proxy locations mirroring the SSL server block for the HTTP default server (port 80)
+- The `/nextcloud/` location includes `proxy_redirect https://tdemers.duckdns.org/ http://$host/;` to rewrite redirects to the local host
 
 ## Nginx
 
