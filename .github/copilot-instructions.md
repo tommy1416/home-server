@@ -2,7 +2,7 @@ workspace has access to the full server files directly. This repository holds do
 
 ## Rules
 
-Each time a configuration file is modified on the home server, a copy must be made in the git repository.
+Each time a configuration file is modified on the home server, a copy must be made in the git repository. Only copy the files if you modified them.
 
 ## Information about the home server
 
