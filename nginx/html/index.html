@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Server services</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      background: #1a1a2e;
+      color: #e0e0e0;
+    }
+    h1 {
+      text-align: center;
+      color: #e94560;
+      border-bottom: 2px solid #16213e;
+      padding-bottom: 0.5rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: #16213e;
+      color: #a0a0c0;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #16213e;
+    }
+    tr:hover td {
+      background: #0f3460;
+    }
+    a {
+      color: #53d8fb;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .service-name {
+      color: #e0e0e0;
+      font-weight: 600;
+    }
+    .note {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #707090;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Server services</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Internal (LAN)</th>
+        <th>External (WAN)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="service-name">Nextcloud</td>
+        <td><a href="/nextcloud/">/nextcloud/</a></td>
+        <td><a href="https://nextcloud.tdemers.duckdns.org/">nextcloud.tdemers.duckdns.org</a></td>
+      </tr>
+      <tr>
+        <td class="service-name">Copilot</td>
+        <td><a href="/copilot/">/copilot/</a></td>
+        <td><a href="https://copilot.tdemers.duckdns.org/">copilot.tdemers.duckdns.org</a></td>
+      </tr>
+      <tr>
+        <td class="service-name">Jellyfin</td>
+        <td><a href="http://192.168.0.31:8096/">192.168.0.31:8096</a></td>
+        <td><em>No external route configured</em></td>
+      </tr>
+      <tr>
+        <td class="service-name">Pi-hole</td>
+        <td><a href="/pihole/">/pihole/</a></td>
+        <td><a href="https://pihole.tdemers.duckdns.org/">pihole.tdemers.duckdns.org</a></td>
+      </tr>
+      <tr>
+        <td class="service-name">Netdata</td>
+        <td><a href="/netdata/">/netdata/</a></td>
+        <td><a href="https://netdata.tdemers.duckdns.org/">netdata.tdemers.duckdns.org</a></td>
+      </tr>
+      <tr>
+        <td class="service-name">Vaultwarden</td>
+        <td><a href="/vaultwarden/">/vaultwarden/</a></td>
+        <td><a href="https://vaultwarden.tdemers.duckdns.org/">vaultwarden.tdemers.duckdns.org</a></td>
+      </tr>
+      <tr>
+        <td class="service-name">Clipboard</td>
+        <td><a href="/clipboard/">/clipboard/</a></td>
+        <td><a href="https://clipboard.tdemers.duckdns.org/">clipboard.tdemers.duckdns.org</a></td>
+      </tr>
+      <tr>
+        <td class="service-name">Ollama API</td>
+        <td><a href="/api/models">/api/models</a></td>
+        <td><a href="https://tdemers.duckdns.org/v1/models">tdemers.duckdns.org</a></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Internal links work on the LAN. External links work from anywhere via tdemers.duckdns.org.</p>
+</body>
+</html>

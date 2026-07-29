@@ -1,0 +1,13 @@
+[Unit]
+Description=Clipboard server
+After=network.target
+
+[Service]
+Type=simple
+User=tdemers
+ExecStart=/usr/local/bin/clipboard-server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
