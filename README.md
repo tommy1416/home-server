@@ -89,3 +89,92 @@ Managed by **Certbot** for `tdemers.duckdns.org`:
 ### Landing page
 
 Served from `/usr/share/nginx/html/index.html` as a static service index with links to all services. This is what you see at `http://127.0.0.1/` or `http://192.168.0.31/`.
+
+## Lessons learned
+
+### Path-based vs subdomain routing
+
+Services that assume they own the domain root (`/`) produce absolute paths in HTML (CSS, JS, images). When proxied behind a sub-path like `/pihole/`, those paths break — the browser requests `/admin/...` instead of `/pihole/admin/...`.
+
+**Path-based** (our original setup) — single `server_name`, multiple `location ^~` blocks:
+- ✅ Single SSL cert, single port 443
+- ✅ Works with any hostname/IP on the same nginx instance
+- ❌ Requires `proxy_redirect` and `X-Forwarded-Prefix` hacks
+- ❌ Broken assets when apps use absolute paths (Pi-hole, etc.)
+- ❌ Must proxy every sub-path the app generates (`/pihole/` + `/admin/`)
+
+**Subdomain-based** (new setup) — one `server_name` per service:
+- ✅ Each app thinks it owns `/` — no path rewriting needed
+- ✅ No broken assets, no `proxy_redirect` needed
+- ✅ Cleaner, simpler location blocks
+- ❌ Requires SSL cert with SANs for each subdomain
+- ❌ Only works on the duckdns domain (not local IPs)
+- ❌ DNS must resolve each subdomain
+
+Bottom line: subdomains are cleaner, but path-based is needed for LAN-only access on local IPs. We run both in parallel.
+
+### The `proxy_redirect` pattern
+
+When an app returns a 302 redirect to its canonical external URL (e.g. Nextcloud → `https://tdemers.duckdns.org/nextcloud/login`), and that URL is unreachable from the LAN (hairpin NAT), nginx can rewrite the redirect in-flight:
+
+```
+proxy_redirect https://tdemers.duckdns.org/ http://$host/;
+```
+
+This intercepts the `Location` header in the 302 response and rewrites it before sending to the client. Without this, the browser follows the redirect to the domain, which times out from inside the LAN.
+
+### Pi-hole behind a reverse proxy
+
+Pi-hole has two quirks:
+1. **Root `/` returns 403** — the real interface is at `/admin/`. Accessing `/pihole/` proxies to Pi-hole's root and gets a 403 with a link to `/admin/`.
+2. **Absolute paths in HTML** — all CSS/JS/images use `/admin/...` paths. You must also proxy `/admin/` to Pi-hole, otherwise those assets hit Nextcloud and return 404.
+
+The fix requires **two** location blocks:
+
+```
+location ^~ /pihole/ { proxy_pass http://10.88.0.3:80/; ... }
+location ^~ /admin/  { proxy_pass http://10.88.0.3:80/admin/; ... }
+```
+
+Both must have the same IP-restriction rules.
+
+### Nginx location matching order
+
+Knowing the precedence saves debugging time:
+
+| Priority | Syntax | Example | Notes |
+|---|---|---|---|
+| 1 (highest) | `= /path` | `location = /` | Exact match only |
+| 2 | `^~ /path/` | `location ^~ /nextcloud/` | Prefix match, stops regex search |
+| 3 | `~` or `~*` | `location ~ \.php$` | Regex match (first match wins) |
+| 4 (lowest) | `/path/` | `location /` | Regular prefix match (longest wins) |
+
+`^~` is critical for service prefixes — it prevents regex locations from overriding the proxy rule.
+
+### The default server trap
+
+Nginx has a **default server** for each port — the first `server` block that matches or has `default_server` set. On port 80, the default is defined in `nginx.conf`:
+
+```
+server {
+    listen 80;
+    server_name _;
+    ...
+    include /etc/nginx/default.d/*.conf;
+}
+```
+
+If a specific `server_name` (like `192.168.0.31`) was listed in another port 80 server block, requests to that IP matched that block instead of the default. By removing `192.168.0.31` from the Certbot-managed block's `server_name`, HTTP requests to the local IP fell through to the default server — which already had all the proxy locations via `default.d/services.conf`.
+
+### Docker/Podman networking
+
+All containers are managed by Podman and published to localhost ports:
+
+| Container | Internal port | Published on host |
+|---|---|---|
+| Pi-hole | `80` | `192.168.0.31:8089` + Docker bridge `10.88.0.3:80` |
+| Nextcloud | `80` | `127.0.0.1:8080` |
+| Netdata | `19999` | `127.0.0.1:19999` |
+| Vaultwarden | `80` | `127.0.0.1:8222` |
+
+When proxying to containers, use the **host-published port** (`127.0.0.1:19999`, not the container's internal IP), unless the container has a dedicated Docker bridge network IP (Pi-hole at `10.88.0.3`).
