@@ -19,6 +19,7 @@ Netdata
 Vaultwarden
 Ollama models API
 Backup system from SSD to HDD
+Custom clipboard
 
 Routes:
 http://192.168.0.31/

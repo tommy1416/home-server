@@ -12,8 +12,8 @@ HTML = """<!doctype html>
 <title>Clipboard</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{display:flex;flex-direction:column;height:100vh}
-textarea{flex:1;width:100%;padding:1rem;font:16px monospace;border:none;outline:none;resize:none;background:#1a1a2e;color:#e0e0e0}
+body{padding:0}
+textarea{height:80vh;width:100%;padding:1rem;font:16px monospace;border:none;outline:none;resize:none;background:#1a1a2e;color:#e0e0e0;display:block}
 button{width:100%;padding:1rem;font-size:1.2rem;border:none;background:#e94560;color:#fff;cursor:pointer}
 button:hover{background:#c23152}
 </style></head>

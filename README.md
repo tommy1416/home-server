@@ -90,6 +90,46 @@ Managed by **Certbot** for `tdemers.duckdns.org`:
 
 Served from `/usr/share/nginx/html/index.html` as a static service index with links to all services. This is what you see at `http://127.0.0.1/` or `http://192.168.0.31/`.
 
+## Clipboard
+
+Minimal clipboard server — paste text from one device and retrieve it from another. No authentication, no database, just a big textarea behind a Python script.
+
+| File | Purpose |
+|---|---|
+| `/usr/local/bin/clipboard-server.py` | Python HTTP server (~55 lines, stdlib only) |
+| `/etc/systemd/system/clipboard.service` | systemd unit (runs as `tdemers`, auto-restarts) |
+| `/var/lib/clipboard/clipboard.txt` | Clipboard data persisted to disk |
+
+Backups:
+- [`clipboard/clipboard-server.py`](clipboard/clipboard-server.py)
+- [`clipboard/clipboard.service`](clipboard/clipboard.service)
+
+### Access
+
+| Route | URL | Notes |
+|---|---|---|
+| **LAN (HTTP)** | `http://192.168.0.31/clipboard/` | Path-based proxy via default server |
+| **LAN (HTTPS)** | `https://192.168.0.31/clipboard/` | SSL via main server block (cert warning for the IP) |
+| **Localhost** | `http://127.0.0.1/clipboard/` | Path-based proxy via default server |
+| **WAN** | `https://clipboard.tdemers.duckdns.org/` | Subdomain-based, separate `server_name` |
+| **Direct** | `http://127.0.0.1:5555/` | Bypasses nginx, hits Python directly |
+
+### How it works
+
+1. **GET** `/` returns the HTML page with the current clipboard content pre-filled in the textarea
+2. **POST** `text=...` saves the content to `/var/lib/clipboard/clipboard.txt` and redraws the page
+
+The server listens on `127.0.0.1:5555` and is proxied behind nginx at `/clipboard/`. All storage is a plain text file — no database, no dependencies beyond Python 3.
+
+### Design decisions
+
+- **No auth** — open to anyone on the network (same as other LAN services)
+- **No styling beyond dark theme** — functional, matches the landing page's `#1a1a2e` background
+- **Full-height textarea** — uses `80vh` so most of the viewport is editable
+- **Zero dependencies** — pure Python 3 `http.server` and `urllib.parse`, nothing to install
+- **Subdomain + path-based** — works both as `clipboard.tdemers.duckdns.org` (clean URL) and `/clipboard/` on any local IP
+- **No WebSocket or streaming** — simple request/response, no upgrade headers needed
+
 ## Lessons learned
 
 ### Path-based vs subdomain routing
