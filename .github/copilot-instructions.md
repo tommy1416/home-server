@@ -32,3 +32,6 @@ https://127.0.0.1/
 Routes that only work from outsite (router doesn't route properly from the local network):
 https://tdemers.duckdns.org/
 http://tdemers.duckdns.org/
+
+Vaultwarden, server path: /etc/systemd/system/vaultwarden.service (Podman container, port 8222)
+Vaultwarden DOMAIN must be set to the subdomain URL (https://vaultwarden.tdemers.duckdns.org), not the path-based URL; routing via both /vaultwarden/ and vaultwarden. subdomain

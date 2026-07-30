@@ -218,3 +218,54 @@ All containers are managed by Podman and published to localhost ports:
 | Vaultwarden | `80` | `127.0.0.1:8222` |
 
 When proxying to containers, use the **host-published port** (`127.0.0.1:19999`, not the container's internal IP), unless the container has a dedicated Docker bridge network IP (Pi-hole at `10.88.0.3`).
+
+## Vaultwarden
+
+Runs as a **Podman container** managed by systemd. Listens on `127.0.0.1:8222`.
+
+Service file: `/etc/systemd/system/vaultwarden.service`
+
+### Access
+
+| URL | Status | Notes |
+|---|---|---|
+| `https://vaultwarden.tdemers.duckdns.org/` | ✅ Works (external only) | Primary access — subdomain-based routing |
+| `https://tdemers.duckdns.org/vaultwarden/` | ✅ Works (external only) | Legacy path-based routing |
+| `http://192.168.0.31/vaultwarden/` | ✅ Works | Local HTTP access |
+| `http://127.0.0.1/vaultwarden/` | ✅ Works | Local HTTP access |
+
+### How it works
+
+**Two nginx routing options** exist for vaultwarden:
+
+1. **Subdomain** (`vaultwarden.tdemers.duckdns.org`): Defined in `/etc/nginx/conf.d/subdomains.conf` — a separate server block with its own `server_name`, SSL termination, and proxy pass to `127.0.0.1:8222`.
+
+2. **Path-based** (`/vaultwarden/`): Defined in `nextcloud.conf` inside the main SSL server block — proxied with `X-Forwarded-Prefix /vaultwarden/` so vaultwarden can generate correct relative URLs.
+
+Both are kept in sync so either URL works.
+
+### Deployment
+
+```ini
+ExecStart=/usr/bin/podman run \
+    --name vaultwarden \
+    -p 127.0.0.1:8222:80 \
+    -e DOMAIN=https://vaultwarden.tdemers.duckdns.org \
+    -e SIGNUPS_ALLOWED=true \
+    -e WEBSOCKET_ENABLED=true \
+    -v /var/lib/vaultwarden:/data:Z docker.io/vaultwarden/server:latest
+```
+
+Key points:
+- **`DOMAIN`** must match the subdomain URL (`https://vaultwarden.tdemers.duckdns.org`), **not** the path-based prefix (`tdemers.duckdns.org/vaultwarden`). If set to the path-based URL, the subdomain gets a Vaultwarden 404 because it generates URLs with the wrong base path.
+- Bound to `127.0.0.1:8222` — only nginx can reach it directly.
+- Data persists in `/var/lib/vaultwarden/`.
+- The container uses `--rm` — it's removed after every stop, then recreated on restart.
+
+### Subdomain vs path: choosing one
+
+Path-based routing was the original setup (single domain, path prefixes for each service). Subdomains were added later for cleaner URLs. Both still work because:
+- The subdomain server block proxies `/` → `http://127.0.0.1:8222` (no prefix)
+- The path-based location proxies `/vaultwarden/` → `http://127.0.0.1:8222` with `X-Forwarded-Prefix /vaultwarden/`
+
+The `DOMAIN` env var is set to the subdomain URL, which is what vaultwarden uses to generate redirects, WebSocket URLs, and CSP headers.
