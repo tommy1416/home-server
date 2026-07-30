@@ -2,46 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Server services</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      max-width: 800px;
+      max-width: 900px;
       margin: 2rem auto;
       padding: 0 1rem;
       background: #1a1a2e;
       color: #e0e0e0;
+      font-size: 1.15rem;
     }
     h1 {
       text-align: center;
       color: #e94560;
       border-bottom: 2px solid #16213e;
       padding-bottom: 0.5rem;
+      font-size: 2rem;
     }
-    table {
+    /* ── Desktop: table layout ── */
+    .service-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 1rem;
     }
-    th {
+    .service-table thead {
+      display: table-header-group;
+    }
+    .service-table th {
       text-align: left;
-      padding: 0.75rem 1rem;
+      padding: 0.9rem 1.2rem;
       background: #16213e;
       color: #a0a0c0;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    td {
-      padding: 0.75rem 1rem;
+    .service-table td {
+      padding: 0.9rem 1.2rem;
       border-bottom: 1px solid #16213e;
+      vertical-align: middle;
     }
-    tr:hover td {
+    .service-table tr:hover td {
       background: #0f3460;
     }
     a {
       color: #53d8fb;
       text-decoration: none;
+      word-break: break-all;
     }
     a:hover {
       text-decoration: underline;
@@ -49,18 +58,83 @@
     .service-name {
       color: #e0e0e0;
       font-weight: 600;
+      white-space: nowrap;
     }
     .note {
       text-align: center;
       margin-top: 1rem;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: #707090;
+    }
+    .lan-label, .wan-label {
+      display: none;
+    }
+
+    /* ── Mobile: card layout ── */
+    @media (max-width: 700px) {
+      body {
+        font-size: 1.1rem;
+        padding: 0 0.75rem;
+        margin: 1rem auto;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 1rem;
+      }
+      .service-table,
+      .service-table tbody,
+      .service-table tr,
+      .service-table td {
+        display: block;
+      }
+      .service-table thead {
+        display: none;
+      }
+      .service-table tr {
+        background: #16213e;
+        border-radius: 12px;
+        padding: 1rem 1rem 0.8rem;
+        margin-bottom: 1rem;
+        border-bottom: none;
+      }
+      .service-table td {
+        padding: 0.25rem 0;
+        border-bottom: none;
+        font-size: 1.1rem;
+      }
+      .service-table tr:hover td {
+        background: transparent;
+      }
+      .service-table td:first-child {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #e94560;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #0f3460;
+        margin-bottom: 0.5rem;
+      }
+      .service-table td a {
+        font-size: 1.1rem;
+        display: inline-block;
+        padding: 0.3rem 0;
+      }
+      .lan-label, .wan-label {
+        display: inline;
+        color: #707090;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-right: 0.4rem;
+      }
+      .note {
+        font-size: 0.85rem;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>🚀 Server services</h1>
-  <table>
+  <h1>🚀 Server Services</h1>
+  <table class="service-table">
     <thead>
       <tr>
         <th>Service</th>
@@ -71,43 +145,43 @@
     <tbody>
       <tr>
         <td class="service-name">Nextcloud</td>
-        <td><a href="/nextcloud/">/nextcloud/</a></td>
-        <td><a href="https://nextcloud.tdemers.duckdns.org/">nextcloud.tdemers.duckdns.org</a></td>
+        <td><span class="lan-label">LAN </span><a href="/nextcloud/">/nextcloud/</a></td>
+        <td><span class="wan-label">WAN </span><a href="https://nextcloud.tdemers.duckdns.org/">nextcloud.tdemers.duckdns.org</a></td>
       </tr>
       <tr>
         <td class="service-name">Copilot</td>
-        <td><a href="/copilot/">/copilot/</a></td>
-        <td><a href="https://copilot.tdemers.duckdns.org/">copilot.tdemers.duckdns.org</a></td>
+        <td><span class="lan-label">LAN </span><a href="/copilot/">/copilot/</a></td>
+        <td><span class="wan-label">WAN </span><a href="https://copilot.tdemers.duckdns.org/">copilot.tdemers.duckdns.org</a></td>
       </tr>
       <tr>
         <td class="service-name">Jellyfin</td>
-        <td><a href="http://192.168.0.31:8096/">192.168.0.31:8096</a></td>
-        <td><em>No external route configured</em></td>
+        <td><span class="lan-label">LAN </span><a href="http://192.168.0.31:8096/">192.168.0.31:8096</a></td>
+        <td><span class="wan-label">WAN </span><em>No external route configured</em></td>
       </tr>
       <tr>
         <td class="service-name">Pi-hole</td>
-        <td><a href="/pihole/">/pihole/</a></td>
-        <td><a href="https://pihole.tdemers.duckdns.org/">pihole.tdemers.duckdns.org</a></td>
+        <td><span class="lan-label">LAN </span><a href="/pihole/">/pihole/</a></td>
+        <td><span class="wan-label">WAN </span><a href="https://pihole.tdemers.duckdns.org/">pihole.tdemers.duckdns.org</a></td>
       </tr>
       <tr>
         <td class="service-name">Netdata</td>
-        <td><a href="/netdata/">/netdata/</a></td>
-        <td><a href="https://netdata.tdemers.duckdns.org/">netdata.tdemers.duckdns.org</a></td>
+        <td><span class="lan-label">LAN </span><a href="/netdata/">/netdata/</a></td>
+        <td><span class="wan-label">WAN </span><a href="https://netdata.tdemers.duckdns.org/">netdata.tdemers.duckdns.org</a></td>
       </tr>
       <tr>
         <td class="service-name">Vaultwarden</td>
-        <td><a href="/vaultwarden/">/vaultwarden/</a></td>
-        <td><a href="https://vaultwarden.tdemers.duckdns.org/">vaultwarden.tdemers.duckdns.org</a></td>
+        <td><span class="lan-label">LAN </span><a href="/vaultwarden/">/vaultwarden/</a></td>
+        <td><span class="wan-label">WAN </span><a href="https://vaultwarden.tdemers.duckdns.org/">vaultwarden.tdemers.duckdns.org</a></td>
       </tr>
       <tr>
         <td class="service-name">Clipboard</td>
-        <td><a href="/clipboard/">/clipboard/</a></td>
-        <td><a href="https://clipboard.tdemers.duckdns.org/">clipboard.tdemers.duckdns.org</a></td>
+        <td><span class="lan-label">LAN </span><a href="/clipboard/">/clipboard/</a></td>
+        <td><span class="wan-label">WAN </span><a href="https://clipboard.tdemers.duckdns.org/">clipboard.tdemers.duckdns.org</a></td>
       </tr>
       <tr>
         <td class="service-name">Ollama API</td>
-        <td><a href="/api/models">/api/models</a></td>
-        <td><a href="https://tdemers.duckdns.org/v1/models">tdemers.duckdns.org</a></td>
+        <td><span class="lan-label">LAN </span><a href="/api/models">/api/models</a></td>
+        <td><span class="wan-label">WAN </span><a href="https://tdemers.duckdns.org/v1/models">tdemers.duckdns.org</a></td>
       </tr>
     </tbody>
   </table>
