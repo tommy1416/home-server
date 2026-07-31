@@ -414,3 +414,37 @@ Path-based routing was the original setup (single domain, path prefixes for each
 - The path-based location proxies `/vaultwarden/` → `http://127.0.0.1:8222` with `X-Forwarded-Prefix /vaultwarden/`
 
 The `DOMAIN` env var is set to the subdomain URL, which is what vaultwarden uses to generate redirects, WebSocket URLs, and CSP headers.
+
+## Jellyfin
+
+Media server (Movies, Series, Music, etc.). Runs **natively as a systemd service** (not containerized) under the `jellyfin` user.
+
+### Deployment
+
+| Component | Path / Value | Purpose |
+|---|---|---|
+| systemd unit | `jellyfin.service` | Runs as user/group `jellyfin` (uid/gid 970) |
+| HTTP port | `127.0.0.1:8096` | Listens internally, proxied by nginx |
+| Data dir | `/var/lib/jellyfin` | Metadata, SQLite DB (`data/jellyfin.db`), user policies |
+| Config dir | `/etc/jellyfin` | `system.xml`, `network.xml`, `encoding.xml` |
+| Log dir | `/var/log/jellyfin` | `log_YYYYMMDD.log` + FFmpeg logs |
+| Web root | `/usr/share/jellyfin-web` | Web UI served by the server |
+
+### Access
+
+| URL | Status | Notes |
+|---|---|---|
+| `https://jellyfin.tdemers.duckdns.org/` | ✅ Works (external only) | Subdomain routing via `/etc/nginx/conf.d/subdomains.conf` → `127.0.0.1:8096` |
+| `http://192.168.0.31:8096/` / `http://127.0.0.1:8096/` | ✅ Works | Direct access, bypasses nginx |
+
+### Media libraries
+
+8 libraries, all under `/mnt/storage`: `Movies`, `Series`, `Music`, `Audio Books`, `Kids`, `Books`, `Porn`, `Games`. Library paths are stored in the SQLite DB at `/var/lib/jellyfin/data/jellyfin.db` (table `TypedBaseItems`, `type = 'CollectionFolder'`).
+
+### File deletion permissions (fix applied 2026-07-31)
+
+- **Symptom:** deleting a movie or song from the web UI reported an error.
+- **Diagnosis:** `/var/log/jellyfin/log_20260731.log` showed `"Access to the path '/mnt/storage/Movies/...' is denied"` on `DELETE /Items/*`. The `jellyfin` process user (uid 970) had no write access because the media dirs were owned `tdemers:tdemers` with mode `755`. This was **not** a user-policy problem — the DELETE request was authorized, so the "Media Deletion" permission was already correct; the failure was purely filesystem permissions.
+- **Fix:** created a shared `media` group (members `tdemers` + `jellyfin`), then for all 8 library dirs: `chgrp -R media`, `chmod -R g+rwX`, and set the **setgid** bit on directories so newly created files/folders inherit the `media` group. Finally `systemctl restart jellyfin` so the running process picks up the new group.
+- **Result:** dirs are now `drwxrwsr-x tdemers:media`; `jellyfin` can read/write/delete media, `tdemers` keeps full access as owner.
+- **Reusable script:** [`scripts/fix-jellyfin-perms.sh`](scripts/fix-jellyfin-perms.sh) — run with `sudo bash` if the permissions ever need to be reapplied (e.g. after a reinstall or if files are moved in without the group).
