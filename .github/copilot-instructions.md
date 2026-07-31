@@ -1,5 +1,7 @@
 workspace has access to the full server files directly. This repository holds documentation of a personal home server and has multiple software installed and configured. Some configuration are backed up in the git repository, for example, the real nginx configuration is located at /etc/nginx/nginx.conf and the backup is in nginx/nginx.conf.
 
+To run commands on the home server, use `ssh server` — passwordless key auth is already set up for tdemers@192.168.0.31 (alias defined in ~/.ssh/config).
+
 ## Rules
 
 Each time a configuration file is modified on the home server, a copy must be made in the git repository. Only copy the files if you modified them.
