@@ -17,7 +17,8 @@ Jellyfin
 Pi-hole
 Netdata
 Vaultwarden
-Ollama models API
+LiteLLM, server path: /etc/litellm/config.yaml repo path: litellm/config.yaml
+Ollama models API (qwen2.5:1.5b, gemma3n:e4b) served behind LiteLLM proxy (port 4000 → 127.0.0.1:11434) with model aliasing (deepseek-v4-flash→qwen2.5:1.5b) and drop_params for Copilot compatibility.
 Backup system from SSD to HDD
 Custom clipboard
 

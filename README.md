@@ -130,6 +130,76 @@ The server listens on `127.0.0.1:5555` and is proxied behind nginx at `/clipboar
 - **Subdomain + path-based** — works both as `clipboard.tdemers.duckdns.org` (clean URL) and `/clipboard/` on any local IP
 - **No WebSocket or streaming** — simple request/response, no upgrade headers needed
 
+## Local AI / LLM (Ollama + LiteLLM)
+
+Ollama runs local models (`qwen2.5:1.5b`, `gemma3n:e4b`) on port `11434`. A **LiteLLM proxy** (port `4000`, systemd `litellm.service`) sits in front of Ollama to handle model name aliasing and parameter filtering. Nginx exposes the OpenAI-compatible `/v1/` route on the main domain, auth-protected with the LiteLLM master key.
+
+**How it connects to VS Code Copilot:**
+The `deepseek-v4-for-copilot` extension (BYOK via VS Code LM API) is configured to point its `baseUrl` at the server and uses the LiteLLM master key as API key. The extension sends Copilot Chat requests (model `deepseek-v4-flash`, with `thinking` + `reasoning_effort` params). LiteLLM maps the model name to Ollama (`deepseek-v4-flash` → `qwen2.5:1.5b`) and drops unsupported params via `drop_params: true`.
+
+### Architecture
+
+```
+VS Code Copilot Chat
+  → deepseek-v4-for-copilot extension
+    → POST https://192.168.0.31/v1/chat/completions
+      → nginx (/v1/ → 127.0.0.1:4000, auth check)
+        → LiteLLM proxy (model alias + drop_params)
+          → Ollama (127.0.0.1:11434)
+```
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `/etc/systemd/system/litellm.service` | systemd unit for LiteLLM proxy |
+| `/etc/litellm/config.yaml` | Model list, aliases, drop_params, master key |
+| `/etc/litellm/env` | `LITELLM_MASTER_KEY` env var |
+| `/etc/nginx/conf.d/ollama-auth.conf` | Bearer token check for `/v1/` |
+| `/usr/local/bin/copilot-body-filter.py` | Strips `reasoning_effort` from JSON body before LiteLLM |
+
+Backups:
+- [`litellm/config.yaml`](litellm/config.yaml)
+
+### LiteLLM model aliases
+
+| VS Code model ID | Litellm model name | Ollama model |
+|---|---|---|
+| `deepseek-v4-flash` | `ollama/qwen2.5:1.5b` | `qwen2.5:1.5b` |
+| `deepseek-v4-pro` | `ollama/gemma3n:e4b` | `gemma3n:e4b` |
+| `qwen2.5:1.5b` | `ollama/qwen2.5:1.5b` | `qwen2.5:1.5b` |
+| `gemma3n:e4b` | `ollama/gemma3n:e4b` | `gemma3n:e4b` |
+
+### Key config: drop_params
+
+The DeepSeek extension sends Copilot-specific parameters (`thinking`, `reasoning_effort`) that Ollama doesn't support. LiteLLM's `drop_params: true` automatically strips `thinking`, but **`reasoning_effort` requires an nginx body filter** (see `copilot-body-filter.py`) because LiteLLM v1.93.0 doesn't drop it for Ollama.
+
+### Access
+
+| URL | Auth | Notes |
+|---|---|---|
+| `https://192.168.0.31/v1/` | Bearer token | nginx checks `ollama-auth.conf`, then proxies to LiteLLM |
+| `http://127.0.0.1:11434/` | None (localhost only) | Ollama directly |
+| `http://127.0.0.1:4000/` | Master key | LiteLLM directly |
+
+### Client configuration (VS Code)
+
+```json
+{
+  "deepseek-copilot.baseUrl": "http://192.168.0.31/v1",
+  "deepseek-copilot.apiKey": "316339f148c24563b44ab23c73696df9"
+}
+```
+
+Set the API key via the `DeepSeek: Set API Key` command in VS Code.
+
+### Ollama models
+
+| Model | Size | Purpose |
+|---|---|---|
+| `qwen2.5:1.5b` | ~1 GB | Fast, general-purpose. Maps to `deepseek-v4-flash`. |
+| `gemma3n:e4b` | ~2.5 GB | Reasoning-capable. Maps to `deepseek-v4-pro`. |
+
 ## Lessons learned
 
 ### Path-based vs subdomain routing
