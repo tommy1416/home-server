@@ -12,6 +12,8 @@ linux distro: Fedora 44
 hardware: intel i7 9700k, AMD 290x, 1TB SSD, 4TB HDD
 
 Softwares:
+podman - not docker
+Autobackup of nextcloud data from /srv/nextcloud-data to /mnt/storage/auto-backup/nextcloud
 Nginx, server path: /etc/nginx/nginx.conf repo path: nginx/nginx.conf
 Nextcloud
 Copilot

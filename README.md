@@ -31,6 +31,81 @@ When Nextcloud is accessed via HTTP reverse proxy, it returns a 302 redirect to 
 - **`/etc/nginx/default.d/services.conf`** — proxy locations mirroring the SSL server block for the HTTP default server (port 80)
 - The `/nextcloud/` location includes `proxy_redirect https://tdemers.duckdns.org/ http://$host/;` to rewrite redirects to the local host
 
+## Nextcloud auto-backup
+
+Automatic backup of all Nextcloud data from `/srv/nextcloud-data` to `/mnt/storage/auto-backup/nextcloud` on the 4TB HDD, driven by systemd timers and a bash script.
+
+### Components
+
+| Component | Path / Name | Purpose |
+|---|---|---|
+| Backup script | `/usr/local/sbin/backup-nextcloud.sh` | Performs the backup (`--monthly` = snapshot mode) |
+| Daily timer | `nextcloud-backup.timer` | Runs every day at `03:15` (± 30 min random delay) |
+| Daily service | `nextcloud-backup.service` | Triggers the script (oneshot) |
+| Monthly timer | `nextcloud-monthly-snapshot.timer` | Runs on the 1st of each month at `04:15` |
+| Monthly service | `nextcloud-monthly-snapshot.service` | Triggers the script with `--monthly` |
+| Compose env | `/opt/nextcloud/.env` | `POSTGRES_*` credentials used for the DB dump |
+
+Both services `Requires=nextcloud-compose.service`, so the backup only runs when the Nextcloud stack is up. `Persistent=true` means a missed run (e.g. server off at 03:15) is caught up on the next boot.
+
+### Target layout
+
+```
+/mnt/storage/auto-backup/nextcloud/
+├── current/                    # rolling mirror, replaced every run
+│   ├── data/                   # rsync mirror of /srv/nextcloud-data
+│   ├── database/nextcloud.sql  # PostgreSQL dump
+│   ├── config/                 # podman-compose.yml, .env, nextcloud-config.tar.gz
+│   └── completed-at.txt        # timestamp of the last completed run
+├── monthly/                    # monthly snapshot (mirror of current/)
+│   └── snapshot-created-at.txt
+└── last-successful-run.txt     # timestamp of the last successful run
+```
+
+`current/` is a rolling mirror — each run overwrites it. `monthly/` keeps a month-end copy of the same layout.
+
+### How it works
+
+1. Acquires a lock (`flock` on `/run/nextcloud-backup.lock`) — if a backup is already running, the new run exits immediately (no concurrent backups).
+2. Puts Nextcloud into **maintenance mode** (`occ maintenance:mode --on`); a `trap` guarantees it is switched back off when the script exits.
+3. Dumps the **PostgreSQL database** → `current/database/nextcloud.sql` (written to `.new`, then atomically renamed).
+4. Copies `podman-compose.yml` + `.env` → `current/config/`, plus a tarball of the Nextcloud `config/` directory.
+5. **rsyncs the full data dir** `rsync -a --delete /srv/nextcloud-data/` → `current/data/` (SSD → HDD mirror).
+6. Writes `current/completed-at.txt`, then `last-successful-run.txt`.
+7. With `--monthly`: additionally mirrors `current/` → `monthly/` and writes `monthly/snapshot-created-at.txt`.
+
+Because Nextcloud is in maintenance mode during the copy, the web UI briefly shows the maintenance screen — this keeps the filesystem consistent with the DB dump.
+
+### Trigger manually
+
+```bash
+# Daily mirror backup (same as the nightly job):
+sudo systemctl start nextcloud-backup.service
+
+# Monthly snapshot (mirror + month-end copy into monthly/):
+sudo systemctl start nextcloud-monthly-snapshot.service
+```
+
+Both block until finished; a large data delta can take several minutes (Nextcloud is in maintenance mode during the run).
+
+### Verify a backup
+
+```bash
+# Last successful run (both timestamps should be freshly updated after a run):
+sudo cat /mnt/storage/auto-backup/nextcloud/last-successful-run.txt
+sudo cat /mnt/storage/auto-backup/nextcloud/current/completed-at.txt
+
+# Recent runs / next scheduled run:
+systemctl list-timers "nextcloud*"
+journalctl -u nextcloud-backup.service -e
+```
+
+### Notes
+
+- The data dir and backup target are root-owned (`0770` / `0750`) — you need `sudo` (or the `tape` group for `/srv/nextcloud-data`) to read them.
+- The mirror is an **exact copy, not versioned** — a file deleted on the source is deleted from `current/` on the next run (`--delete`). Monthly snapshots only preserve the state at month-end.
+- Backups are stored on the HDD only, not in this git repo.
+
 ## Nginx
 
 Serves as the reverse proxy for all services behind a single domain.
