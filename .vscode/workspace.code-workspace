@@ -3,10 +3,6 @@
     {
       "path": "../",
       "name": "home-server"
-    },
-    {
-      "path": "/",
-      "name": "server-root"
     }
   ],
   "settings": {
