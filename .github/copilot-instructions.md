@@ -26,6 +26,8 @@ Ollama models API (qwen2.5:1.5b, gemma3n:e4b) served behind LiteLLM proxy (port 
 Backup system from SSD to HDD
 Custom clipboard
 
+Pi-hole runs as a Podman container managed by systemd (service: pihole.service). The `pihole` binary is only inside the container, so use `podman exec -it pihole pihole <cmd>` (e.g. `podman exec -it pihole pihole setpassword`). Admin UI: http://192.168.0.31/pihole/ (LAN only, via nginx to 10.88.0.3:80) or direct at http://192.168.0.31:8089/admin/. DNS on 192.168.0.31:53. Data in /var/lib/pihole/etc-pihole.
+
 Routes:
 http://192.168.0.31/
 http://127.0.0.1/
