@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>Local Copilot</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Local Copilot home">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        <span>Local Copilot</span>
+      </a>
+      <div class="connection" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="connection-status">Ready</span>
+      </div>
+      <label class="model-picker">
+        <span>Model</span>
+        <select id="model-select" aria-label="Choose AI model" disabled>
+          <option value="qwen2.5:1.5b">qwen2.5:1.5b</option>
+        </select>
+      </label>
+    </header>
+
+    <section class="conversation" aria-label="Conversation">
+      <div class="conversation-inner" id="conversation" aria-live="polite">
+        <div class="welcome" id="welcome">
+          <p class="eyebrow">Private AI workspace</p>
+          <h1>What can I help you think through?</h1>
+          <p class="welcome-copy">Ask a question and get an answer from the model running on your server.</p>
+          <div class="suggestions" aria-label="Suggested prompts">
+            <button type="button" data-prompt="Explain a technical idea in simple terms.">Explain an idea</button>
+            <button type="button" data-prompt="Help me make a practical plan for a project.">Make a plan</button>
+            <button type="button" data-prompt="Review this problem and suggest a few approaches.">Explore approaches</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="composer-area" aria-label="Ask a question">
+      <form class="composer" id="composer">
+        <label class="sr-only" for="prompt">Ask Local Copilot</label>
+        <textarea id="prompt" rows="1" maxlength="4000" placeholder="Ask anything..." autocomplete="off"></textarea>
+        <div class="composer-footer">
+          <span class="composer-hint">Enter to send · Shift+Enter for a new line</span>
+          <div class="composer-actions">
+            <button class="clear-button" id="clear-button" type="button">Clear</button>
+            <button class="send-button" id="send-button" type="submit">
+              <span>Send</span>
+              <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </div>
+      </form>
+      <p class="error-message" id="error-message" role="alert" hidden></p>
+      <p class="footer-note">Responses are generated locally by your configured Ollama model.</p>
+    </section>
+  </main>
+  <script src="app.js" defer></script>
+</body>
+</html>

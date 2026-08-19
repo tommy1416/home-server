@@ -1,0 +1,15 @@
+# Qwen3.8-27B Heretic (RVN Q4_K_M) — local import fix (2026-08-19)
+# The raw GGUF from HF lacked tokenizer.chat_template, which made Ollama's
+# chat formatting broken ("missing tokenizer.chat_template ... poorly formatted").
+# Recreate with the Qwen3 ChatML template + stop tokens + a longer keep-alive
+# (cold load of the 16.5 GB blob from HDD is slow; keep it warm).
+FROM qwen3.8-27b-heretic:latest
+TEMPLATE """{{- if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{- end }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+<|im_start|>assistant
+"""
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|endoftext|>"
+PARAMETER num_ctx 16384

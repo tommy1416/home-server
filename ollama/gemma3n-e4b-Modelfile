@@ -1,0 +1,5 @@
+# Gemma 3n 6.9B — num_ctx override to full 32K native context
+# Applied 2026-08-17 via: ollama create gemma3n:e4b -f <this file>
+# (reuses existing Q4_K_M blobs; only the manifest/params are updated)
+FROM gemma3n:e4b
+PARAMETER num_ctx 32768
